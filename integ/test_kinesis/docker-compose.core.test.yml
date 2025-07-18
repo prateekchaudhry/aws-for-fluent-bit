@@ -2,7 +2,7 @@ version: "2"
 
 services:
     fluent-bit:
-        image: amazon/aws-for-fluent-bit:latest
+        image: ${FLUENT_BIT_IMAGE:-amazon/aws-for-fluent-bit:latest}
         environment:
             - "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"
             - "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"

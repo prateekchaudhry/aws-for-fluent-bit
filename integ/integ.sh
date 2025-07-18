@@ -12,6 +12,10 @@ if [ "$ARCHITECTURE" = "aarch64" ]; then
     ARCHITECTURE="arm64"
 fi
 
+# Set the Fluent Bit image to use for integration tests
+# This can be overridden by setting FLUENT_BIT_IMAGE environment variable
+export FLUENT_BIT_IMAGE="${FLUENT_BIT_IMAGE:-amazon/aws-for-fluent-bit:latest}"
+
 # If we're testing locally, then these are set to local images rather than pulling
 # from ECR. See https://github.com/aws/aws-for-fluent-bit?tab=readme-ov-file#local-testing
 if [ -z "$CW_INTEG_VALIDATOR_IMAGE" ]; then

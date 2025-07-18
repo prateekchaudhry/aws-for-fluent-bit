@@ -81,6 +81,9 @@ release: build build-init linux-plugins
 	docker build $(DOCKER_BUILD_FLAGS) --build-arg AL_TAG=${AL_TAG} -t amazon/aws-for-fluent-bit:runtime-deps-al${AL_TAG} -f ./scripts/dockerfiles/runtime/Dockerfile.deps-al${AL_TAG} .
 	docker build $(DOCKER_BUILD_FLAGS) --build-arg AL_TAG=${AL_TAG} --build-arg COMPILE_IMAGE=amazon/aws-for-fluent-bit:compile-al${AL_TAG} --build-arg RUNTIME_IMAGE=amazon/aws-for-fluent-bit:runtime-deps-al${AL_TAG} -t amazon/aws-for-fluent-bit:latest-al${AL_TAG} -f ./scripts/dockerfiles/runtime/Dockerfile .
 	docker build $(DOCKER_BUILD_FLAGS) --build-arg AL_TAG=${AL_TAG} --build-arg RUNTIME_IMAGE=amazon/aws-for-fluent-bit:latest-al${AL_TAG} -t amazon/aws-for-fluent-bit:init-latest-al${AL_TAG} -f ./scripts/dockerfiles/runtime/Dockerfile.init .
+	# Create convenience tags for integration tests
+	docker tag amazon/aws-for-fluent-bit:latest-al${AL_TAG} amazon/aws-for-fluent-bit:latest
+	docker tag amazon/aws-for-fluent-bit:init-latest-al${AL_TAG} amazon/aws-for-fluent-bit:init-latest
 
 .PHONY: release-al2023
 release-al2023: AL_TAG=2023
@@ -160,11 +163,11 @@ integ/out:
 
 .PHONY: integ-cloudwatch
 integ-cloudwatch: integ/out release
-	./integ/integ.sh cloudwatch
+	FLUENT_BIT_IMAGE=amazon/aws-for-fluent-bit:latest-al2 ./integ/integ.sh cloudwatch
 
 .PHONY: integ-cloudwatch-dev
 integ-cloudwatch-dev: integ/out cloudwatch-dev
-	./integ/integ.sh cloudwatch
+	FLUENT_BIT_IMAGE=amazon/aws-for-fluent-bit:latest-al2 ./integ/integ.sh cloudwatch
 
 .PHONY: integ-clean-cloudwatch
 integ-clean-cloudwatch: integ/out
@@ -172,19 +175,19 @@ integ-clean-cloudwatch: integ/out
 
 .PHONY: integ-kinesis
 integ-kinesis: integ/out release
-	./integ/integ.sh kinesis
+	FLUENT_BIT_IMAGE=amazon/aws-for-fluent-bit:latest-al2 ./integ/integ.sh kinesis
 
 .PHONY: integ-kinesis-dev
 integ-kinesis-dev: integ/out kinesis-dev
-	./integ/integ.sh kinesis
+	FLUENT_BIT_IMAGE=amazon/aws-for-fluent-bit:latest-al2 ./integ/integ.sh kinesis
 
 .PHONY: integ-firehose
 integ-firehose: integ/out release
-	./integ/integ.sh firehose
+	FLUENT_BIT_IMAGE=amazon/aws-for-fluent-bit:latest-al2 ./integ/integ.sh firehose
 
 .PHONY: integ-firehose-dev
 integ-firehose-dev: integ/out firehose-dev
-	./integ/integ.sh firehose
+	FLUENT_BIT_IMAGE=amazon/aws-for-fluent-bit:latest-al2 ./integ/integ.sh firehose
 
 .PHONY: integ-clean-s3
 integ-clean-s3: integ/out
@@ -192,12 +195,21 @@ integ-clean-s3: integ/out
 
 .PHONY: integ-dev
 integ-dev: integ/out dev
-	./integ/integ.sh kinesis
-	./integ/integ.sh kinesis_streams
-	./integ/integ.sh firehose
-	./integ/integ.sh kinesis_firehose
-	./integ/integ.sh cloudwatch
-	./integ/integ.sh cloudwatch_logs
+	FLUENT_BIT_IMAGE=amazon/aws-for-fluent-bit:latest-al2 ./integ/integ.sh kinesis
+	FLUENT_BIT_IMAGE=amazon/aws-for-fluent-bit:latest-al2 ./integ/integ.sh kinesis_streams
+	FLUENT_BIT_IMAGE=amazon/aws-for-fluent-bit:latest-al2 ./integ/integ.sh firehose
+	FLUENT_BIT_IMAGE=amazon/aws-for-fluent-bit:latest-al2 ./integ/integ.sh kinesis_firehose
+	FLUENT_BIT_IMAGE=amazon/aws-for-fluent-bit:latest-al2 ./integ/integ.sh cloudwatch
+	FLUENT_BIT_IMAGE=amazon/aws-for-fluent-bit:latest-al2 ./integ/integ.sh cloudwatch_logs
+
+.PHONY: integ-dev-al2023
+integ-dev-al2023: integ/out release-al2023
+	FLUENT_BIT_IMAGE=amazon/aws-for-fluent-bit:latest-al2023 ./integ/integ.sh kinesis
+	FLUENT_BIT_IMAGE=amazon/aws-for-fluent-bit:latest-al2023 ./integ/integ.sh kinesis_streams
+	FLUENT_BIT_IMAGE=amazon/aws-for-fluent-bit:latest-al2023 ./integ/integ.sh firehose
+	FLUENT_BIT_IMAGE=amazon/aws-for-fluent-bit:latest-al2023 ./integ/integ.sh kinesis_firehose
+	FLUENT_BIT_IMAGE=amazon/aws-for-fluent-bit:latest-al2023 ./integ/integ.sh cloudwatch
+	FLUENT_BIT_IMAGE=amazon/aws-for-fluent-bit:latest-al2023 ./integ/integ.sh cloudwatch_logs
 
 .PHONY: integ
 integ: integ/out
