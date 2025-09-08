@@ -23,6 +23,7 @@ phases:
       - |
         if [ "$BUILD_VERSION" = "2" ]; then
           echo "Building AWS for Fluent Bit version 2 (current behavior)"
+          set -e
           
           # Check latest image versions from dockerhub and from GitHub source file
           ./scripts/publish.sh cicd-check-image-version
