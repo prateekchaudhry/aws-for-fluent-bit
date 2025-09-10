@@ -2,6 +2,15 @@
 
 set -ex
 
+# BUILD_VERSION is always provided - validate it
+echo "BUILD_VERSION is set to: $BUILD_VERSION"
+
+if [ "$BUILD_VERSION" != "2" ] && [ "$BUILD_VERSION" != "3" ]; then
+    echo "Unsupported BUILD_VERSION: $BUILD_VERSION"
+    echo "Supported versions are: 2, 3"
+    exit 1
+fi
+
 export AWS_REGION="us-west-2"
 export PROJECT_ROOT="$(pwd)"
 export VOLUME_MOUNT_CONTAINER="/out"
@@ -11,6 +20,10 @@ export ARCHITECTURE=$(uname -m)
 if [ "$ARCHITECTURE" = "aarch64" ]; then
     ARCHITECTURE="arm64"
 fi
+
+# Set version-specific architecture suffix for log group names and other resources
+# Make naming uniform across build versions - always include BUILD_VERSION
+ARCH_SUFFIX="${ARCHITECTURE}-${BUILD_VERSION}"
 
 # If we're testing locally, then these are set to local images rather than pulling
 # from ECR. See https://github.com/aws/aws-for-fluent-bit?tab=readme-ov-file#local-testing
@@ -22,7 +35,7 @@ if [ -z "$S3_INTEG_VALIDATOR_IMAGE" ]; then
 fi
 
 test_cloudwatch() {
-	export LOG_GROUP_NAME="fluent-bit-integ-test-${ARCHITECTURE}"
+	export LOG_GROUP_NAME="fluent-bit-integ-test-${ARCH_SUFFIX}"
 	# Tag is used to name the log stream; each test run has a unique (random) log stream name
 	export TAG=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 10)
 	docker-compose --file ./integ/test_cloudwatch/docker-compose.test.yml build
@@ -39,7 +52,7 @@ test_cloudwatch() {
 }
 
 clean_cloudwatch() {
-	export LOG_GROUP_NAME="fluent-bit-integ-test-${ARCHITECTURE}"
+	export LOG_GROUP_NAME="fluent-bit-integ-test-${ARCH_SUFFIX}"
 	# Clean up resources that were created in the test
 	docker-compose --file ./integ/test_cloudwatch/docker-compose.clean.yml build
 	docker-compose --file ./integ/test_cloudwatch/docker-compose.clean.yml up --abort-on-container-exit
@@ -142,9 +155,9 @@ test_kinesis_firehose() {
 }
 
 test_s3() {
-	# different S3 prefix for each test
-	export S3_PREFIX_PUT_OBJECT="logs/${ARCHITECTURE}/putobject"
-	export S3_PREFIX_MULTIPART="logs/${ARCHITECTURE}/multipart"
+	# different S3 prefix for each test, version-specific to avoid conflicts
+	export S3_PREFIX_PUT_OBJECT="logs/${ARCH_SUFFIX}/putobject"
+	export S3_PREFIX_MULTIPART="logs/${ARCH_SUFFIX}/multipart"
 	# Tag is used in the s3 keys; each test run has a unique (random) tag
 	export TAG=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 10)
 	# Generates log data which will be stored on the s3 bucket

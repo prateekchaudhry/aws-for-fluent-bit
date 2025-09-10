@@ -181,7 +181,7 @@ integ-dev: integ/out dev
 
 .PHONY: integ
 integ: integ/out
-	./integ/integ.sh cicd
+	BUILD_VERSION=$(BUILD_VERSION) ./integ/integ.sh cicd
 
 .PHONY: delete-resources
 delete-resources:
