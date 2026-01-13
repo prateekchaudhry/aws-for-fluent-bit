@@ -266,6 +266,11 @@ publish_to_public_ecr() {
 publish_ssm() {
 	# Check if BUILD_VERSION=3 images exist before publishing SSM parameters
 	if [ "$BUILD_VERSION" = "3" ]; then
+		# Login to ECR so check_tag_exists can inspect manifests
+		# Extract registry from repo URI (e.g., 906394416424.dkr.ecr.us-east-1.amazonaws.com)
+		local registry=$(echo "${2}" | cut -d'/' -f1)
+		aws ecr get-login-password --region ${1} | docker login --username AWS --password-stdin ${registry}
+
 		if ! check_tag_exists "${2}" "${3}"; then
 			echo "BUILD_VERSION=3 image ${2}:${3} not found, skipping SSM parameter publish for region ${1}"
 			return 0
